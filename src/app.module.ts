@@ -3,11 +3,13 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { FirebaseModule } from './firebase/firebase.module';
 import { ConfigModule } from '@nestjs/config';
+import { PlaygroundModule } from './playground/playground.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
-    FirebaseModule
+    FirebaseModule,
+    PlaygroundModule
   ],
   controllers: [AppController],
   providers: [AppService],
