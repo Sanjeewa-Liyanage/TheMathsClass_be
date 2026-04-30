@@ -1,0 +1,14 @@
+import { User } from "./user.schema";
+import { UserRole } from "../enum/userrole.enum";
+
+export class SysAdmin extends User {
+    staffCode?: string;
+    gender?: string;
+    contactNo?: string;
+    whatsAppNo?: string;
+
+    constructor(partial: Partial<SysAdmin>) {
+        super(partial);
+        this.role = UserRole.SYSTEMADMIN;
+    }
+}
