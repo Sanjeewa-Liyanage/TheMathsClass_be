@@ -3,16 +3,16 @@ import { PlaygroundService, RouteInfo } from './playground.service';
 
 @Controller('playground')
 export class PlaygroundController {
-  constructor(private readonly playgroundService: PlaygroundService) {}
+    constructor(private readonly playgroundService: PlaygroundService) { }
 
-  @Get('socket')
-  @Header('Content-Type', 'text/html')
-  getSocketPlayground(): string {
-    return this.generateSocketHtml();
-  }
+    @Get('socket')
+    @Header('Content-Type', 'text/html')
+    getSocketPlayground(): string {
+        return this.generateSocketHtml();
+    }
 
-  private generateSocketHtml(): string {
-    return `
+    private generateSocketHtml(): string {
+        return `
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -395,38 +395,38 @@ export class PlaygroundController {
 </body>
 </html>
     `;
-  }
+    }
 
-  @Get()
-  getPlayground(
-    @Query('url') url?: string,
-    @Query('method') method?: string,
-    @Query('data') data?: string,
-    @Query('headers') headers?: string,
-  ): string {
-    const routes = this.playgroundService.getRoutes();
-    // Sort routes for better UI
-    routes.sort((a, b) => a.path.localeCompare(b.path));
-    
-    return this.generateHtml(routes, url, method, data, headers);
-  }
+    @Get()
+    getPlayground(
+        @Query('url') url?: string,
+        @Query('method') method?: string,
+        @Query('data') data?: string,
+        @Query('headers') headers?: string,
+    ): string {
+        const routes = this.playgroundService.getRoutes();
+        // Sort routes for better UI
+        routes.sort((a, b) => a.path.localeCompare(b.path));
 
-  private generateHtml(routes: RouteInfo[], initialUrl?: string, initialMethod?: string, initialData?: string, initialHeaders?: string): string {
-    // We inject the discovered routes into a JavaScript variable inside the HTML
-    const routesJson = JSON.stringify(routes);
-    const safeInitialUrl = JSON.stringify(initialUrl || '');
-    const safeInitialMethod = JSON.stringify(initialMethod || '');
-    // If data comes in as a query param, it might look like a string. Ideally we keep it as string.
-    const safeInitialData = JSON.stringify(initialData || '');
-    const safeInitialHeaders = JSON.stringify(initialHeaders || '');
+        return this.generateHtml(routes, url, method, data, headers);
+    }
 
-    return `
+    private generateHtml(routes: RouteInfo[], initialUrl?: string, initialMethod?: string, initialData?: string, initialHeaders?: string): string {
+        // We inject the discovered routes into a JavaScript variable inside the HTML
+        const routesJson = JSON.stringify(routes);
+        const safeInitialUrl = JSON.stringify(initialUrl || '');
+        const safeInitialMethod = JSON.stringify(initialMethod || '');
+        // If data comes in as a query param, it might look like a string. Ideally we keep it as string.
+        const safeInitialData = JSON.stringify(initialData || '');
+        const safeInitialHeaders = JSON.stringify(initialHeaders || '');
+
+        return `
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WebWizards API Tester</title>
+    <title>The Maths Class API Tester</title>
     <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <style>
         .api-tester { background-color: #f5f5f5; padding: 20px; border-radius: 5px; }
@@ -438,7 +438,7 @@ export class PlaygroundController {
 </head>
 <body>
     <div class="container mt-5 api-tester">
-        <h2>WebWizards API Tester</h2>
+        <h2>The Maths Class API Tester</h2>
         <div class="row">
             <div class="col-md-6">
                 <div class="api-tester">
@@ -666,5 +666,5 @@ try {
 </body>
 </html>
     `;
-  }
+    }
 }
