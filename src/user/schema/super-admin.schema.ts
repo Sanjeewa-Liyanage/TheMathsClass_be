@@ -1,0 +1,14 @@
+import { User } from "./user.schema";
+import { UserRole } from "../enum/userrole.enum";
+
+export class SuperAdmin extends User {
+    gender?: string;
+    contactNo?: string;
+    whatsAppNo?: string;
+
+    constructor(partial: Partial<SuperAdmin>) {
+        super(partial);
+        Object.assign(this, partial);
+        this.role = UserRole.SUPERADMIN;
+    }
+}
