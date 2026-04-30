@@ -1,4 +1,4 @@
-import { BadRequestException, ConflictException, Injectable } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { FirebaseService } from 'src/firebase/firebase.service';
 import { userConverter } from './helpers/firestoredata-converter';
 import { randomBytes } from 'crypto';
@@ -31,6 +31,14 @@ export class UserService {
     async findByEmail(email: string) {
         const querySnapshot = await this.getUsersCollection()
             .where('email', '==', email).get();
+        if (querySnapshot.empty) return null;
+        const doc = querySnapshot.docs[0];
+        return { id: doc.id, ...doc.data() }
+    }
+
+    async findbyCode(code: string) {
+        const querySnapshot = await this.getUsersCollection()
+            .where('userCode', '==', code).get();
         if (querySnapshot.empty) return null;
         const doc = querySnapshot.docs[0];
         return { id: doc.id, ...doc.data() }
@@ -106,7 +114,7 @@ export class UserService {
                 firstName: dto.firstName,
                 lastName: dto.lastName,
                 email: dto.email,
-                studentCode: studentCode,
+                userCode: studentCode,
                 passwordHash: hashedPassword,
                 username: dto.username,
                 contactNumber: dto.phoneNumber,
@@ -132,7 +140,7 @@ export class UserService {
                 firstName: dto.firstName,
                 lastName: dto.lastName,
                 email: dto.email,
-                staffCode: staffCode,
+                userCode: staffCode,
                 passwordHash: hashedPassword,
                 username: dto.username,
                 contactNo: dto.phoneNumber,
@@ -152,7 +160,7 @@ export class UserService {
                 firstName: dto.firstName,
                 lastName: dto.lastName,
                 email: dto.email,
-                adminCode: adminCode,
+                userCode: adminCode,
                 passwordHash: hashedPassword,
                 username: dto.username,
                 contactNo: dto.phoneNumber,
@@ -220,7 +228,29 @@ export class UserService {
     }
 
 
+    async validateUser(password: string, code?: string, email?: string,) {
+        let user
+        if (email) {
+            user = await this.findByEmail(email)
+            if (!user) throw new NotFoundException('User not found')
+        } else if (code) {
+            user = await this.findbyCode(code)
+            if (!user) throw new NotFoundException('User not found')
+        } else {
+            throw new BadRequestException('Email or code is required')
+        }
 
+        if (!user.isActive) {
+            throw new BadRequestException('User is not active')
+        }
+
+        const isPasswordValid = await bcrypt.compare(password, user.passwordHash)
+        if (!isPasswordValid) {
+            throw new BadRequestException('Invalid password')
+        }
+
+        return user
+    }
 
 
 

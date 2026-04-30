@@ -5,7 +5,6 @@ import { UserRole } from "../enum/userrole.enum";
 import { CATEGORY } from "../enum/category.enum";
 
 export class Student extends User {
-    studentCode?: string;
     dateOfBirth?: Date;
     gender?: String;
     category?: CATEGORY;
