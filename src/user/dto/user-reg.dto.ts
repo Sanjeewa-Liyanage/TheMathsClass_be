@@ -55,6 +55,10 @@ export class UserRegDto {
 
     @IsOptional()
     @IsString()
+    whatsAppNo: string;
+
+    @IsOptional()
+    @IsString()
     guardianName: string;
 
     @IsOptional()

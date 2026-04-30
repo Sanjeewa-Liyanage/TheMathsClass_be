@@ -5,6 +5,8 @@ import { randomBytes } from 'crypto';
 import { UserRegDto } from './dto/user-reg.dto';
 import { UserRole } from './enum/userrole.enum';
 import { Student } from './schema/student.schema';
+import { SysAdmin } from './schema/sysadmin-schema';
+import { SuperAdmin } from './schema/super-admin.schema';
 import { CATEGORY } from './enum/category.enum';
 import * as bcrypt from 'bcrypt';
 import { User } from './schema/user.schema';
@@ -88,7 +90,7 @@ export class UserService {
         const role = dto.role || UserRole.STUDENT;
         const hashedPassword = await bcrypt.hash(dto.password, 10);
 
-        let userData: User | Student;
+        let userData: User | Student | SysAdmin | SuperAdmin;
 
         if (role === UserRole.STUDENT) {
             if (!dto.category) {
@@ -123,8 +125,48 @@ export class UserService {
                 updatedAt: new Date(),
             });
 
+        } else if (role === UserRole.SYSTEMADMIN) {
+            const staffCode = await this.codeGenerator(UserRole.SYSTEMADMIN);
+
+            userData = new SysAdmin({
+                firstName: dto.firstName,
+                lastName: dto.lastName,
+                email: dto.email,
+                staffCode: staffCode,
+                passwordHash: hashedPassword,
+                username: dto.username,
+                contactNo: dto.phoneNumber,
+                whatsAppNo: dto.whatsAppNo,
+                gender: dto.gender,
+                role: role,
+                isActive: UserStatus.PENDING,
+                isVerified: false,
+                createdAt: new Date(),
+                updatedAt: new Date(),
+            });
+
+        } else if (role === UserRole.SUPERADMIN) {
+            const adminCode = await this.codeGenerator(UserRole.SUPERADMIN);
+
+            userData = new SuperAdmin({
+                firstName: dto.firstName,
+                lastName: dto.lastName,
+                email: dto.email,
+                adminCode: adminCode,
+                passwordHash: hashedPassword,
+                username: dto.username,
+                contactNo: dto.phoneNumber,
+                whatsAppNo: dto.whatsAppNo,
+                gender: dto.gender,
+                role: role,
+                isActive: UserStatus.PENDING,
+                isVerified: false,
+                createdAt: new Date(),
+                updatedAt: new Date(),
+            });
+
         } else {
-            throw new BadRequestException(`Registration for role "${role}" is not yet supported`);
+            throw new BadRequestException(`Registration for role "${role}" is not supported`);
         }
 
         const docRef = await collection.add({ ...userData });
@@ -136,6 +178,7 @@ export class UserService {
 
     async updateRefreshTokenHash(id: string, refreshToken: string) {
         let hashedRefreshToken: string | null = null;
+        let rtExpire = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
         if (refreshToken) {
             const salt = await bcrypt.genSalt(10);
             hashedRefreshToken = await bcrypt.hash(refreshToken, salt);
@@ -144,7 +187,36 @@ export class UserService {
         await this.firebaseService.getFirestore()
             .collection('users')
             .doc(id)
-            .update({ refreshToken: hashedRefreshToken });
+            .update({ refreshToken: hashedRefreshToken, rtExpire });
+    }
+
+
+    private async codeGenerator(role: UserRole) {
+        const firestore = this.firebaseService.getFirestore()
+        const year = new Date().getFullYear().toString().slice(-2)
+        let roleChar;
+
+        if (role === UserRole.SYSTEMADMIN) roleChar = 'SA'
+        else if (role === UserRole.SUPERADMIN) roleChar = 'SAD'
+        const counterDocRef = firestore.collection('counters').doc(`${role}`)
+
+        return await firestore.runTransaction(async (tx) => {
+            const snap = await tx.get(counterDocRef)
+            let currentCount = 0;
+            if (snap.exists) {
+                const data = snap.data();
+                if (data && data[roleChar]) {
+                    currentCount = data[roleChar]
+                }
+            }
+            const nextCount = currentCount + 1;
+            const countStr = nextCount.toString().padStart(6, '0');
+
+            await tx.set(counterDocRef, { [roleChar]: nextCount }, { merge: true });
+
+            return `TMC-${year}-${roleChar}-${countStr}`;
+
+        })
     }
 
 

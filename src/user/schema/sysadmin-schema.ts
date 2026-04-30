@@ -9,6 +9,7 @@ export class SysAdmin extends User {
 
     constructor(partial: Partial<SysAdmin>) {
         super(partial);
+        Object.assign(this, partial);
         this.role = UserRole.SYSTEMADMIN;
     }
 }
