@@ -9,7 +9,7 @@ export class AuthService {
     constructor(private userService: UserService, private jwtService: JwtService) { }
 
 
-    //register function
+    //* _________________________________ **register function** _________________________________ 
 
     async register(dto: UserRegDto) {
 
@@ -24,6 +24,8 @@ export class AuthService {
         await this.userService.updateRefreshTokenHash(newUser.id, tokens.refreshToken);
         return tokens;
     }
+
+    //*_________________________________ **get tokens** _________________________________ 
 
     async getTokens(id: string, email: string, role: string) {
         const payload = {

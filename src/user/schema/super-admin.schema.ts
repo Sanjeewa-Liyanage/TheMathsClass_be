@@ -9,6 +9,7 @@ export class SuperAdmin extends User {
 
     constructor(partial: Partial<SuperAdmin>) {
         super(partial);
+        Object.assign(this, partial);
         this.role = UserRole.SUPERADMIN;
     }
 }

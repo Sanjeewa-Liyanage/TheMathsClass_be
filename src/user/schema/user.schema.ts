@@ -16,6 +16,11 @@ export class User {
     isVerified?: boolean;
     isDeleted?: boolean;
 
+    lastLogin?: Date;
+    refreshToken?: string;
+    rtExpire: Date;
+
+
     createdAt?: Date;
     updatedAt?: Date;
 
