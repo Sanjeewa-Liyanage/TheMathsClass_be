@@ -2,7 +2,6 @@ import { User } from "./user.schema";
 import { UserRole } from "../enum/userrole.enum";
 
 export class SysAdmin extends User {
-    staffCode?: string;
     gender?: string;
     contactNo?: string;
     whatsAppNo?: string;

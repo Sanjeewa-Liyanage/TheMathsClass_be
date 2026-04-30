@@ -1,5 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { UserLoginDto } from 'src/user/dto/user-login.dto';
 import { UserRegDto } from 'src/user/dto/user-reg.dto';
 import { UserRole } from 'src/user/enum/userrole.enum';
 import { UserService } from 'src/user/user.service';
@@ -22,6 +23,17 @@ export class AuthService {
         const tokens = await this.getTokens(newUser.id, newUser.email, newUser.role as UserRole);
 
         await this.userService.updateRefreshTokenHash(newUser.id, tokens.refreshToken);
+        return tokens;
+    }
+    //*_____________________________________** login function **_____________________________________  
+
+    async login(dto: UserLoginDto) {
+        const user = await this.userService.validateUser(dto.password, dto.userCode, dto.email)
+        if (!user) {
+            throw new BadRequestException("Invalid user")
+        }
+        const tokens = await this.getTokens(user.id, user.email, user.role as UserRole);
+        await this.userService.updateRefreshTokenHash(user.id, tokens.refreshToken);
         return tokens;
     }
 

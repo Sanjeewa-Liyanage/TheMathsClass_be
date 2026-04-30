@@ -10,11 +10,12 @@ export class User {
     lastName?: string;
     profileUrl?: string;
     contactNumber?: string;
+    userCode: string;
 
     role?: UserRole;
     isActive?: UserStatus;
     isVerified?: boolean;
-    isDeleted?: boolean;
+    isDeleted?: false;
 
     lastLogin?: Date;
     refreshToken?: string;
