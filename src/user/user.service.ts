@@ -1,7 +1,7 @@
 import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { FirebaseService } from 'src/firebase/firebase.service';
 import { userConverter } from './helpers/firestoredata-converter';
-import { randomBytes } from 'crypto';
+import { randomBytes, randomUUID } from 'crypto';
 import { UserRegDto } from './dto/user-reg.dto';
 import { UserRole } from './enum/userrole.enum';
 import { Student } from './schema/student.schema';
@@ -11,6 +11,10 @@ import { CATEGORY } from './enum/category.enum';
 import * as bcrypt from 'bcrypt';
 import { User } from './schema/user.schema';
 import { UserStatus } from './enum/userstatus.enum';
+import { EnrollmentStatus } from './enum/enrollment-status.enum';
+import { AcademicRecord } from './schema/academic-record.schema';
+import { CreateAcademicRecordDto } from './dto/create-academic-record.dto';
+import { UpdateAcademicRecordDto } from './dto/update-academic-record.dto';
 
 @Injectable()
 export class UserService {
@@ -253,7 +257,98 @@ export class UserService {
     }
 
 
+    // ─── Academic Record Methods ──────────────────────────────────
 
+    private async findStudentDocByCode(userCode: string) {
+        const querySnapshot = await this.firebaseService.getFirestore()
+            .collection('users')
+            .where('userCode', '==', userCode)
+            .limit(1)
+            .get();
+
+        if (querySnapshot.empty) {
+            throw new NotFoundException('Student not found');
+        }
+
+        const doc = querySnapshot.docs[0];
+        const data = doc.data();
+
+        if (data?.role !== UserRole.STUDENT) {
+            throw new BadRequestException('User is not a student');
+        }
+
+        return { docRef: doc.ref, data };
+    }
+
+    async addAcademicRecord(userCode: string, dto: CreateAcademicRecordDto) {
+        const { docRef, data } = await this.findStudentDocByCode(userCode);
+
+        const academicHistory: AcademicRecord[] = data?.academicHistory || [];
+
+        // Check for duplicate: same year and same grade
+        const duplicate = academicHistory.find(
+            r => r.academicYear === dto.academicYear && r.gradeLevel === dto.gradeLevel
+        );
+        if (duplicate) {
+            throw new ConflictException(
+                `Academic record for year ${dto.academicYear}, grade ${dto.gradeLevel} already exists`
+            );
+        }
+
+        const newRecord: AcademicRecord = {
+            id: randomUUID(),
+            academicYear: dto.academicYear,
+            gradeLevel: dto.gradeLevel,
+            enrollmentStatus: dto.enrollmentStatus || EnrollmentStatus.ONGOING,
+        };
+
+        academicHistory.push(newRecord);
+
+        await docRef.update({ academicHistory, updatedAt: new Date() });
+
+        return newRecord;
+    }
+
+    async updateAcademicRecord(userCode: string, recordId: string, dto: UpdateAcademicRecordDto) {
+        if (!dto.enrollmentStatus) {
+            throw new BadRequestException('enrollmentStatus is required');
+        }
+
+        const { docRef, data } = await this.findStudentDocByCode(userCode);
+
+        const academicHistory: AcademicRecord[] = data?.academicHistory || [];
+
+        const recordIndex = academicHistory.findIndex(r => r.id === recordId);
+        if (recordIndex === -1) {
+            throw new NotFoundException(`Academic record with id "${recordId}" not found`);
+        }
+
+        academicHistory[recordIndex].enrollmentStatus = dto.enrollmentStatus;
+
+        await docRef.update({ academicHistory, updatedAt: new Date() });
+
+        return academicHistory[recordIndex];
+    }
+
+    async getAcademicRecords(userCode: string) {
+        const { data } = await this.findStudentDocByCode(userCode);
+        return data?.academicHistory || [];
+    }
+
+    async getCurrentGrade(userCode: string) {
+        const records: AcademicRecord[] = await this.getAcademicRecords(userCode);
+
+        const currentYear = new Date().getFullYear();
+        const currentRecord = records.find(
+            r => r.academicYear === currentYear && r.enrollmentStatus === EnrollmentStatus.ONGOING
+        );
+
+        if (!currentRecord) {
+            return { gradeLevel: null, message: 'No active enrollment found for the current year' };
+        }
+
+        return { gradeLevel: currentRecord.gradeLevel, academicYear: currentRecord.academicYear };
+    }
 
 
 }
