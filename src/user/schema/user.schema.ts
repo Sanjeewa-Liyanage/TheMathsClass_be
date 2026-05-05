@@ -20,7 +20,7 @@ export class User {
     lastLogin?: Date;
     refreshToken?: string;
     rtExpire: Date;
-
+    activeSessionId: string;
 
     createdAt?: Date;
     updatedAt?: Date;
