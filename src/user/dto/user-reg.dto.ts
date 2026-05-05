@@ -1,4 +1,5 @@
 import { IsString, IsNotEmpty, IsOptional, IsEmail, IsBoolean, IsEnum, IsDate, ValidateIf, IsNumber } from 'class-validator';
+import { Type } from 'class-transformer';
 import { UserRole } from '../enum/userrole.enum';
 import { CATEGORY } from '../enum/category.enum';
 import { AcademicRecord } from '../schema/academic-record.schema';
@@ -41,6 +42,7 @@ export class UserRegDto {
 
     @IsOptional()
     @IsDate()
+    @Type(() => Date)
     dateOfBirth: Date
 
     @IsOptional()

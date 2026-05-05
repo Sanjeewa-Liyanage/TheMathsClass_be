@@ -8,6 +8,7 @@ export class Student extends User {
     dateOfBirth?: Date;
     gender?: String;
     category?: CATEGORY;
+    qrToken?: string;
 
 
     guardianName?: string;

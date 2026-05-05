@@ -47,6 +47,11 @@ export class UserService {
         const doc = querySnapshot.docs[0];
         return { id: doc.id, ...doc.data() }
     }
+    async findbyId(id: string) {
+        const docSnap = await this.getUsersCollection().doc(id).get();
+        if (!docSnap.exists) return null;
+        return { id: docSnap.id, ...docSnap.data() }
+    }
 
 
     private async generateStudentCode(category?: CATEGORY, alyear?: number): Promise<string> {
@@ -202,6 +207,13 @@ export class UserService {
             .update({ refreshToken: hashedRefreshToken, rtExpire });
     }
 
+    async updateQrtoken(id: string, qrToken: string) {
+        await this.firebaseService.getFirestore()
+            .collection('users')
+            .doc(id)
+            .update({ qrToken: qrToken });
+    }
+
 
     private async codeGenerator(role: UserRole) {
         const firestore = this.firebaseService.getFirestore()
@@ -349,6 +361,22 @@ export class UserService {
 
         return { gradeLevel: currentRecord.gradeLevel, academicYear: currentRecord.academicYear };
     }
+    //* session
 
+    async updateActiveSession(id: string, sessionId: string) {
+        await this.firebaseService.getFirestore()
+            .collection('users')
+            .doc(id)
+            .update({ activeSessionId: sessionId, })
+    }
+    //* clearSession
+
+    async clearSession(id: string) {
+        await this.firebaseService.getFirestore()
+            .collection('users')
+            .doc(id)
+            .update({ activeSessionId: null, refreshToken: null })
+
+    }
 
 }
